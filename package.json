@@ -1,0 +1,39 @@
+{
+  "name": "koishi-plugin-imgupload",
+  "description": "Upload your image form chat message to alist server",
+  "version": "0.0.1",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin",
+    "imgupload",
+    "alist"
+  ],
+  "koishi": {
+    "browser": true,
+    "description": {
+      "en": "Upload your image form chat message to alist server",
+      "zh": "将聊天图片或者url上传到alist存储中"
+    }
+  },
+  "peerDependencies": {
+    "koishi": "^4.16.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "axios": "^1.6.7",
+    "form-data": "^4.0.0"
+  },
+  "Dependencies": {
+    "@types/node": "^20.11.19",
+    "axios": "^1.6.7",
+    "form-data": "^4.0.0"
+  }
+}
