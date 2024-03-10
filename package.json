@@ -1,9 +1,14 @@
 {
   "name": "koishi-plugin-imgupload",
   "description": "Upload your image form chat message to alist server",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
+  "homepage": "https://github.com/Twiyin0/koishi-plugin-imgupload.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Twiyin0/koishi-plugin-imgupload.git"
+  },
   "files": [
     "lib",
     "dist"

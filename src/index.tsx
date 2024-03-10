@@ -29,6 +29,7 @@ export interface Config {
   sendnotice: boolean,
   imgshareUrl: string,
   sendwait: number,
+  coiledCount: number,
 }
 
 export const Config: Schema<Config> = Schema.object({
@@ -48,6 +49,8 @@ export const Config: Schema<Config> = Schema.object({
   .description('图片分享地址'),
   sendwait: Schema.number().default(30000)
   .description('等待图片发送时间(ms)'),
+  coiledCount: Schema.number().default(10)
+  .description('连续发送夺少张图后退出循环')
 })
 
 export function apply(ctx: Context, config: Config) {
@@ -55,10 +58,11 @@ export function apply(ctx: Context, config: Config) {
   .option('folder', '-f <path:string> 指定上传的文件夹')
   .option('time', '-t <time:number> 等待图片上传时间')
   .option('gif', '-g 是否为gif')
+  .option('coiled', '-c 开启连续上传模式，以$或￥结束')
   .action(async ({session, options}, img) => {
     let urlmatch = /https?:\/\/((?:[\w-]+\.){0,}(?:[a-z]+\d*|localhost|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))(?::\d{2,5})?\/?.*/;
     if(config.alistUrl.match(urlmatch)) {
-    let imgmsg:any = null;
+    let imgmsg:any = '';
     let date = new Date();
     let dateinfo = `${date.getFullYear()}${date.getMonth()+1}${date.getDate()}${date.getHours()}${date.getMinutes()}${date.getSeconds()}`
     let datecnt = 0;
@@ -68,11 +72,6 @@ export function apply(ctx: Context, config: Config) {
 
     const upload = new FileUploader(config.alistUser, config.alistPassword, config.alistUrl, config.alist_opt_code? config.alist_opt_code:null);
 
-    if(!session.quote && !img) {
-      await session.send('请发送图片>>');
-      let waittime = options.time? Number(options.time)>0? options.time:config.sendwait:config.sendwait;
-      imgmsg = await session.prompt(waittime);
-    }
     let img_msg_url = img? img.match(/^(\s+)?https?:\/\/(.*)/):null;
     if (img_msg_url && img_msg_url[0]) {
       try {
@@ -90,33 +89,47 @@ export function apply(ctx: Context, config: Config) {
         return `url图片上传失败，请检查url是否可访问！`
       }
     }
-    let imgmatches = img? h.select(img, 'img'):(session.quote? h.select(session.quote.content, 'img'): imgmsg? h.select(imgmsg, 'img'):null);
-    if (imgmatches && imgmatches[0]) {
-      const failedUploads = [];
-      var faildcnt:number = 0;
-      for (const imgmatch of imgmatches) {
-        const { src } = imgmatch.attrs;
-        try {
-          if (config.sendnotice) session.send('图片开始上传……');
-          const res:any = await upload.uploadRemoteFile(src, `${basePath}${savePath? savePath:''}/${session.userId}_${dateinfo}-p${datecnt++}.${options.gif? 'gif':'png'}`)
-          if (res.code != 200) {
-            faildcnt++;
-            logger.error(`来自${src}的图片上传失败： ${res}`);
+
+    let coiled = (options.coiled && !session.quote)? config.coiledCount:1;
+    if(!session.quote && !img)
+      await session.send(`请发送图片${options.coiled? `(连发模式,上限${config.coiledCount})张,$或￥结束`:''}>>`);
+    while (coiled--) {
+      if(!session.quote && !img) {
+        let waittime = options.time? Number(options.time)>0? options.time:config.sendwait:config.sendwait;
+        imgmsg = await session.prompt(waittime);
+      }
+
+      if (!session.quote && (imgmsg.toString().includes("$") || imgmsg.toString().includes("￥")) && options.coiled) break;
+      let imgmatches = img? h.select(img, 'img'):(session.quote? h.select(session.quote.content, 'img'): imgmsg? h.select(imgmsg, 'img'):null);
+
+      if (imgmatches && imgmatches[0]) {
+        const failedUploads = [];
+        var faildcnt:number = 0;
+        for (const imgmatch of imgmatches) {
+          const { src } = imgmatch.attrs;
+          try {
+            if (config.sendnotice) session.send('图片开始上传……');
+            const res:any = await upload.uploadRemoteFile(src, `${basePath}${savePath? savePath:''}/${session.userId}_${dateinfo}-p${datecnt++}.${options.gif? 'gif':'png'}`)
+            if (res.code != 200) {
+              faildcnt++;
+              logger.error(`来自${src}的图片上传失败： ${res}`);
+            }
+            // await uploadImageFromURL(config.alistUrl, src, `${session.userId}_${dateinfo}-p${datecnt++}.${options.gif? 'gif':'png'}`);   // 自建图床上传函数
+          } catch (err) {
+            failedUploads.push(src);
+            logger.error(`图片上传失败：(imgurl: ${src})`, err);
           }
-          // await uploadImageFromURL(config.alistUrl, src, `${session.userId}_${dateinfo}-p${datecnt++}.${options.gif? 'gif':'png'}`);   // 自建图床上传函数
-        } catch (err) {
-          failedUploads.push(src);
-          logger.error(`图片上传失败：(imgurl: ${src})`, err);
         }
-      }
-      if (failedUploads.length > 0 || faildcnt>0) {
-        await session.send(`图片上传失败：${failedUploads.join(', ')}, 请查看log`);
+        if (failedUploads.length > 0 || faildcnt>0) {
+          await session.send(`图片上传失败：${failedUploads.join(', ')}, 请查看log`);
+        } else {
+          !options.coiled? await session.send(`所有图片上传完成，图片分享地址 ${config.imgshareUrl? config.imgshareUrl: '图片暂不公开分享'}`):'';
+        }
       } else {
-        await session.send(`所有图片上传完成，图片分享地址 ${config.imgshareUrl? config.imgshareUrl: '图片暂不公开分享'}`);
+        return `未检测到图片或输入超时……${options.coiled? '已退出连发模式':''}`;
       }
-    } else {
-      return '未检测到图片或输入超时……';
     }
+    return `连发退出，所有图片上传完成！图片分享地址 ${config.imgshareUrl? config.imgshareUrl: '图片暂不公开分享'}`
   } else return <>错误的图片上传地址，请联系管理员……</>
   })
 }

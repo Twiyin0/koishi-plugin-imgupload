@@ -7,7 +7,7 @@ export class FileUploader {
     username: string;
     password: string;
     apiURL: string;
-    otp_code?: string|undefined
+    otp_code?: string
 
     constructor(username: string, password: string, apiURL: string, otp_code?:string) {
         this.username = username;
