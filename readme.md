@@ -6,6 +6,10 @@ Upload your image form chat message to alist server
 
 # CHANGELOG
 
+## v0.1.2
+### 修复
+* 修复了一点小bug
+
 ## v0.1.1
 ### 修复
 * 修复了一点小bug

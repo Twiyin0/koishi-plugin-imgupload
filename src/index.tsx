@@ -99,7 +99,7 @@ export function apply(ctx: Context, config: Config) {
         imgmsg = await session.prompt(waittime);
       }
 
-      if (!session.quote && (imgmsg.toString().includes("$") || imgmsg.toString().includes("￥")) && options.coiled) break;
+      if ((!session.quote && (imgmsg.toString().includes("$") || imgmsg.toString().includes("￥")) && options.coiled ) || !imgmsg) break;
       let imgmatches = img? h.select(img, 'img'):(session.quote? h.select(session.quote.content, 'img'): imgmsg? h.select(imgmsg, 'img'):null);
 
       if (imgmatches && imgmatches[0]) {
@@ -129,7 +129,7 @@ export function apply(ctx: Context, config: Config) {
         return `未检测到图片或输入超时……${options.coiled? '已退出连发模式':''}`;
       }
     }
-    return `连发退出，所有图片上传完成！图片分享地址 ${config.imgshareUrl? config.imgshareUrl: '图片暂不公开分享'}`
+    if (options.coiled) return `连发退出，所有图片上传完成！图片分享地址 ${config.imgshareUrl? config.imgshareUrl: '图片暂不公开分享'}`
   } else return <>错误的图片上传地址，请联系管理员……</>
   })
 }
