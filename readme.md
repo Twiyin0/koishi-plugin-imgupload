@@ -6,6 +6,10 @@ Upload your image form chat message to alist server
 
 # CHANGELOG
 
+## v0.1.3
+### 修复
+* 修复了无法获取回复消息图片的问题，欠考虑了
+
 ## v0.1.2
 ### 修复
 * 修复了一点小bug

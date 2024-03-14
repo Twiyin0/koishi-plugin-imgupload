@@ -90,18 +90,20 @@ export function apply(ctx: Context, config: Config) {
       }
     }
 
-    let coiled = (options.coiled && !session.quote)? config.coiledCount:1;
+    let coiled = (options.coiled)? session.quote? 1:config.coiledCount:1;
+    coiled = session.quote? 1:coiled;
     if(!session.quote && !img)
       await session.send(`请发送图片${options.coiled? `(连发模式,上限${config.coiledCount})张,$或￥结束`:''}>>`);
     while (coiled--) {
       if(!session.quote && !img) {
         let waittime = options.time? Number(options.time)>0? options.time:config.sendwait:config.sendwait;
         imgmsg = await session.prompt(waittime);
-      }
+      } else if (session.quote) imgmsg = 1;
+      
+      if (((imgmsg.toString().includes("$") || imgmsg.toString().includes("￥")) && options.coiled ) || !imgmsg) break;
 
-      if ((!session.quote && (imgmsg.toString().includes("$") || imgmsg.toString().includes("￥")) && options.coiled ) || !imgmsg) break;
       let imgmatches = img? h.select(img, 'img'):(session.quote? h.select(session.quote.content, 'img'): imgmsg? h.select(imgmsg, 'img'):null);
-
+      
       if (imgmatches && imgmatches[0]) {
         const failedUploads = [];
         var faildcnt:number = 0;
