@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-imgupload",
-  "description": "Upload your image form chat message to alist server",
-  "version": "0.0.1",
+  "description": "Upload images from chat to VueFileManager server",
+  "version": "0.3.1",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -12,9 +12,26 @@
   "keywords": [
     "chatbot",
     "koishi",
-    "plugin"
+    "plugin",
+    "imgupload",
+    "vuefm",
+    "vfm"
   ],
+  "koishi": {
+    "browser": true,
+    "description": {
+      "en": "Upload images from chat to VueFileManager server",
+      "zh": "将聊天图片或 URL 上传到 VueFileManager 存储中"
+    }
+  },
   "peerDependencies": {
-    "koishi": "^4.16.8"
+    "koishi": "^4.16.6"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "form-data": "^4.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.47"
   }
 }
