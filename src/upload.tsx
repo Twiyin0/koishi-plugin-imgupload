@@ -255,7 +255,8 @@ export class FileManager {
       'image/bmp': 'bmp',
       'image/svg+xml': 'svg',
     }
-    const contentType = (response.headers['content-type'] || '').split(';')[0].trim().toLowerCase()
+    const rawContentType = response.headers['content-type']
+    const contentType = (String(rawContentType || '')).split(';')[0].trim().toLowerCase()
     const ext = mimeToExt[contentType]
 
     // 如果文件名没有扩展名，根据 Content-Type 补上
