@@ -17,6 +17,10 @@
     "vuefm",
     "vfm"
   ],
+    "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Twiyin0/koishi-plugin-imgupload.git"
+  },
   "koishi": {
     "browser": true,
     "description": {
